@@ -1,7 +1,27 @@
 import { PrismaClient } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import type { ConsultaHistorico } from "../service/consulta-historico";
+
+
+
 const prisma = new PrismaClient();
+
+
+
+    function calcularValor(entrada: Date, saida: Date): number{
+
+        const diferencaMs = saida.getTime() - entrada.getTime();
+
+        if(diferencaMs < 0){
+            throw new Error("Data de saida menor que a de entrada");
+        }
+        
+        const horaEmMs = 1000 * 60 * 60;
+
+        const horas = Math.ceil(diferencaMs/horaEmMs);
+
+        return horas * 7.50;
+    }
 
 export class RegistroRepository{
     async listarHistorico(consulta: ConsultaHistorico) {
@@ -73,12 +93,25 @@ export class RegistroRepository{
 }
 
     async registrarSaida(id:number){
+            const registro = await prisma.registroEstacionamentos.findUnique({where: {id}})
+            if (!registro) {
+                throw new Error("Registro não encontrado");
+            }
+            const hrsaida = new Date();
+            const valor = calcularValor(registro.entrada, hrsaida);
+            
+
+
         return prisma.registroEstacionamentos.update({
             where:{id},
-            data:{saida: new Date()},
-            include:{carro:true, vaga:true}
+            data:{
+                saida: hrsaida,
+                valor: valor
+            },
+            include:{carro:true, vaga:true},
         })
     }
+
     async buscarPorId(id: number) {
     return prisma.registroEstacionamentos.findUnique({
         where: { id },
@@ -93,4 +126,8 @@ async encerrarSeAtivo(id: number) {
     });
     return resultado.count;
 }
+
+
+    
+
 }
