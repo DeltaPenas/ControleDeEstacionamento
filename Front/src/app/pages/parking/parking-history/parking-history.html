@@ -62,6 +62,7 @@
                   <th scope="col">SAÍDA</th>
                   <th scope="col">PERMANÊNCIA</th>
                   <th scope="col">SITUAÇÃO</th>
+                  <th scope="col">VALOR</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +88,11 @@
                         registro.saida === null ? 'Em andamento' : 'Encerrada'
                       }}</span>
                     </td>
+                    <td data-label="Valor">
+                    <span class="badge" [class.history-open]="registro.valor === null">
+                      {{ registro.valor !== null ? (registro.valor) : '—' }}
+                    </span>
+                  </td>
                   </tr>
                 }
               </tbody>

@@ -76,6 +76,7 @@ export interface RegistroEntrada {
   vagaId: number;
   carro: Carro;
   vaga: Vaga;
+  valor: number | null;
 }
 
 export interface RegistroSaida extends Omit<RegistroEntrada, 'saida'> {

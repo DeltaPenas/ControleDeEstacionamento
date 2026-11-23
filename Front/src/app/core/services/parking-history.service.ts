@@ -13,6 +13,14 @@ function isRegistro(value: unknown): value is RegistroHistorico {
     Number.isInteger(registro.id) &&
     registro.id > 0 &&
     isDate(registro.entrada) &&
+    (registro.valor === null ||
+    (typeof registro.valor === 'number' && Number.isFinite(registro.valor))) &&
+    (registro.saida === null ||
+    (isDate(registro.saida) && Date.parse(registro.saida) >= Date.parse(registro.entrada))) &&
+
+    Number.isInteger(registro.id) &&
+    registro.id > 0 &&
+    isDate(registro.entrada) &&
     (registro.saida === null ||
       (isDate(registro.saida) && Date.parse(registro.saida) >= Date.parse(registro.entrada))) &&
     isCarro(registro.carro) &&
