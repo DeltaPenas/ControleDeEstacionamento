@@ -20,6 +20,10 @@ async ocupar(req: Request, res: Response) {
     try {
             const { carroid, vagaid } = req.body;
 
+            console.log("BODY:", req.body);
+            console.log("CARROID:", carroid, typeof carroid);
+            console.log("VAGAID:", vagaid, typeof vagaid);
+
             // validando os camnpos recebidos
             if (!Number.isInteger(carroid) ||carroid <= 0 ||!Number.isInteger(vagaid) || vagaid <= 0) {
                 return res.status(400).json({
@@ -67,6 +71,10 @@ async ocupar(req: Request, res: Response) {
 
     async liberar(req: Request, res: Response) {
     try {
+        
+        console.log("BODY:", req.body);
+        console.log("REGISTRO ID:", req.body?.registroId);
+
         const registroId = req.body?.registroId;
 
         if (!Number.isInteger(registroId) || registroId <= 0) {

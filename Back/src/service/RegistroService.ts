@@ -54,17 +54,19 @@ export class RegistroService{
     }
 
 
-  async liberarVaga(registroId: number) {
+async liberarVaga(registroId: number) {
+    console.log("ENTROU NO SERVICE");
+
     const registro = await registroRepository.buscarPorId(registroId);
+
     if (!registro) {
         throw new AppError("Registro não encontrado", 404);
     }
 
-    const encerrados = await registroRepository.encerrarSeAtivo(registroId);
-    if (encerrados === 0) {
+    if (registro.saida !== null) {
         throw new AppError("Este registro já foi encerrado", 409);
     }
 
-    return registroRepository.buscarPorId(registroId);
+    return registroRepository.registrarSaida(registroId);
 }
 }

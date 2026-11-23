@@ -99,6 +99,10 @@ export class RegistroRepository{
             }
             const hrsaida = new Date();
             const valor = calcularValor(registro.entrada, hrsaida);
+
+            console.log("Horário de entrada:", registro.entrada);
+            console.log("Horário de saída:", hrsaida);
+            console.log("Valor calculado:", valor);
             
 
 
