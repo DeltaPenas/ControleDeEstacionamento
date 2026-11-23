@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PARKING_ROWS, PHYSICAL_CAPACITY } from '../../core/parking-layout';
 import { ParkingDataService } from '../../core/services/parking-data.service';
+import { RelatoriosService, type FaturamentoMensal } from '../../core/services/relatorios.service';
 import { Icon } from '../../shared/icon/icon';
 import { MetricCard } from '../../shared/metric-card/metric-card';
 
@@ -21,9 +22,27 @@ function normalize(value: string) {
 })
 export class Dashboard {
   protected readonly data = inject(ParkingDataService);
+  private readonly relatorios = inject(RelatoriosService);
   protected readonly capacity = PHYSICAL_CAPACITY;
   protected readonly search = signal('');
   protected readonly situacao = signal('');
+  protected readonly reportYear = signal(new Date().getFullYear());
+  protected readonly reportMonth = signal(new Date().getMonth() + 1);
+  protected readonly report = signal<FaturamentoMensal | null>(null);
+  protected readonly reportLoading = signal(false);
+  protected readonly reportError = signal(false);
+  protected readonly downloadLoading = signal(false);
+  protected readonly downloadError = signal(false);
+  protected readonly validReportPeriod = computed(
+    () =>
+      Number.isInteger(this.reportYear()) &&
+      this.reportYear() >= 2000 &&
+      this.reportYear() <= 2100 &&
+      Number.isInteger(this.reportMonth()) &&
+      this.reportMonth() >= 1 &&
+      this.reportMonth() <= 12,
+  );
+  protected readonly months = Array.from({ length: 12 }, (_, index) => index + 1);
   protected readonly physicalNumbers = new Set(PARKING_ROWS.flatMap((row) => row.numeros));
   protected readonly loading = computed(
     () => this.data.parkingLoading() || this.data.carros.status() === 'loading',
@@ -51,5 +70,57 @@ export class Dashboard {
   protected refresh() {
     this.data.refreshParking();
     this.data.carros.load();
+  }
+
+  protected consultarFaturamento() {
+    if (!this.validReportPeriod() || this.reportLoading()) return;
+
+    this.reportLoading.set(true);
+    this.reportError.set(false);
+    this.report.set(null);
+    this.relatorios.faturamentoMensal(this.reportYear(), this.reportMonth()).subscribe({
+      next: (report) => {
+        this.report.set(report);
+        this.reportLoading.set(false);
+      },
+      error: () => {
+        this.reportError.set(true);
+        this.reportLoading.set(false);
+      },
+    });
+  }
+
+  protected baixarFaturamento() {
+    if (!this.validReportPeriod() || this.downloadLoading()) return;
+
+    const year = this.reportYear();
+    const month = this.reportMonth();
+    this.downloadLoading.set(true);
+    this.downloadError.set(false);
+    this.relatorios.baixarFaturamento(year, month).subscribe({
+      next: (file) => {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        const paddedMonth = String(month).padStart(2, '0');
+        link.href = url;
+        link.download = `faturamento-${year}-${paddedMonth}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.downloadLoading.set(false);
+      },
+      error: () => {
+        this.downloadError.set(true);
+        this.downloadLoading.set(false);
+      },
+    });
+  }
+
+  protected formatCurrency(value: number) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  protected formatReportDay(day: string) {
+    const [year, month, date] = day.split('-');
+    return `${date}/${month}/${year}`;
   }
 }

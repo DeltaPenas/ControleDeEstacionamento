@@ -80,6 +80,122 @@
     }
   </div>
 
+  <section class="panel report-panel" aria-labelledby="report-title" [attr.aria-busy]="reportLoading()">
+    <header class="panel-heading">
+      <div>
+        <h2 id="report-title">Faturamento mensal</h2>
+        <p>Consulte os valores recebidos e baixe o detalhamento em CSV.</p>
+      </div>
+    </header>
+    <div class="report-content">
+      <div class="report-toolbar">
+        <label>
+          Ano
+          <input
+            type="number"
+            min="2000"
+            max="2100"
+            [value]="reportYear()"
+            (input)="reportYear.set(+$any($event.target).value)"
+          />
+        </label>
+        <label>
+          Mês
+          <select
+            [value]="reportMonth()"
+            (change)="reportMonth.set(+$any($event.target).value)"
+          >
+            @for (month of months; track month) {
+              <option [value]="month">{{ month.toString().padStart(2, '0') }}</option>
+            }
+          </select>
+        </label>
+        <button
+          class="button button-primary"
+          type="button"
+          (click)="consultarFaturamento()"
+          [disabled]="!validReportPeriod() || reportLoading()"
+        >
+          @if (reportLoading()) {
+            Consultando…
+          } @else {
+            Consultar faturamento
+          }
+        </button>
+        <button
+          class="button"
+          type="button"
+          (click)="baixarFaturamento()"
+          [disabled]="!validReportPeriod() || downloadLoading()"
+        >
+          @if (downloadLoading()) {
+            Preparando CSV…
+          } @else {
+            Baixar CSV
+          }
+        </button>
+      </div>
+      @if (!validReportPeriod()) {
+        <p class="report-error" role="alert">Informe um ano entre 2000 e 2100.</p>
+      }
+      @if (reportError()) {
+        <p class="report-error" role="alert">
+          Não foi possível consultar o faturamento. Verifique a conexão e tente novamente.
+        </p>
+      }
+      @if (downloadError()) {
+        <p class="report-error" role="alert">
+          Não foi possível baixar o CSV. Verifique a conexão e tente novamente.
+        </p>
+      }
+      @if (report(); as monthlyReport) {
+        <div class="report-summary" aria-live="polite">
+          <div>
+            <span>Total faturado</span>
+            <strong>{{ formatCurrency(monthlyReport.totalFaturado) }}</strong>
+          </div>
+          <div>
+            <span>Saídas com valor</span>
+            <strong>{{ monthlyReport.quantidadeSaidas }}</strong>
+          </div>
+          <div>
+            <span>Ticket médio</span>
+            <strong>{{ formatCurrency(monthlyReport.ticketMedio) }}</strong>
+          </div>
+          <div>
+            <span>Registros sem valor</span>
+            <strong>{{ monthlyReport.registrosSemValor }}</strong>
+          </div>
+        </div>
+        @if (monthlyReport.porDia.length) {
+          <div class="table-scroll report-table">
+            <table>
+              <caption class="visually-hidden">Faturamento por dia</caption>
+              <thead>
+                <tr>
+                  <th scope="col">DIA</th>
+                  <th scope="col">SAÍDAS</th>
+                  <th scope="col">FATURAMENTO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (day of monthlyReport.porDia; track day.dia) {
+                  <tr>
+                    <td>{{ formatReportDay(day.dia) }}</td>
+                    <td>{{ day.quantidade }}</td>
+                    <td>{{ formatCurrency(day.total) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="report-empty">Não há faturamento registrado para este mês.</p>
+        }
+      }
+    </div>
+  </section>
+
   <div class="dashboard-grid">
     <section
       class="panel vehicles-panel"

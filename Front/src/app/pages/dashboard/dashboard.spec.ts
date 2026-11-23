@@ -246,4 +246,69 @@ describe('Dashboard', () => {
       Array.from(element.querySelectorAll('.metric-value'), (node) => node.textContent?.trim()),
     ).toEqual(['27vagas', '0', '1', '100%']);
   });
+
+  it('consulta o faturamento mensal e mostra o resumo e os valores por dia', () => {
+    http.expectOne('/vagas').flush([]);
+    http.expectOne('/vagas/status').flush([]);
+    http.expectOne('/carros').flush([]);
+
+    const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.report-toolbar .button-primary')?.click();
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/relatorios/faturamento' &&
+          request.params.get('ano') === String(year) &&
+          request.params.get('mes') === String(month),
+      )
+      .flush({
+        ano: year,
+        mes: month,
+        totalFaturado: 125,
+        quantidadeSaidas: 3,
+        ticketMedio: 41.67,
+        registrosSemValor: 1,
+        porDia: [{ dia: `${year}-11-22`, total: 125, quantidade: 3 }],
+      });
+
+    fixture.detectChanges();
+    expect(element.querySelector('.report-summary')?.textContent).toContain('125,00');
+    expect(element.querySelector('.report-summary')?.textContent).toContain('41,67');
+    expect(element.querySelector('.report-table')?.textContent).toContain('22/11/' + year);
+    expect(element.querySelector('.report-table')?.textContent).toContain('3');
+  });
+
+  it('solicita o CSV pelo endpoint de download do faturamento', () => {
+    http.expectOne('/vagas').flush([]);
+    http.expectOne('/vagas/status').flush([]);
+    http.expectOne('/carros').flush([]);
+
+    const createObjectURL = vi.fn(() => 'blob:faturamento');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      const element = fixture.nativeElement as HTMLElement;
+      element.querySelector<HTMLButtonElement>('.report-toolbar .button:not(.button-primary)')?.click();
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth() + 1;
+      http
+        .expectOne(
+          (request) =>
+            request.url === '/relatorios/faturamento/download' &&
+            request.params.get('ano') === String(year) &&
+            request.params.get('mes') === String(month),
+        )
+        .flush(new Blob(['relatorio'], { type: 'text/csv' }));
+
+      expect(createObjectURL).toHaveBeenCalledOnce();
+      expect(click).toHaveBeenCalledOnce();
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:faturamento');
+    } finally {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    }
+  });
 });
