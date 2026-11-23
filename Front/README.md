@@ -13,7 +13,7 @@ src/app/
     parking-layout.ts              # Numeração, alinhamento e dimensões físicas
     services/                      # HTTP e estado compartilhado das consultas
   pages/
-    dashboard/                     # Indicadores e veículos cadastrados
+    dashboard/                     # Indicadores, veículos cadastrados e faturamento mensal
     parking/                       # Mapa, ocupante, entrada, saída e histórico
     veiculos/                      # Consulta, cadastro, edição e exclusão pela API
   shared/
@@ -49,6 +49,19 @@ src/app/
 - `ParkingHistoryService`: consulta `GET /registros`, valida itens e metadados de
   paginação e mantém os filtros aplicados na sessão. Consultas substituídas são
   canceladas; falhas têm tratamento independente das consultas do mapa.
+- `RelatoriosService`: consulta `GET /relatorios/faturamento` com ano e mês para
+  mostrar resumo e detalhamento diário na Dashboard;
+  `GET /relatorios/faturamento/download` baixa o CSV do mesmo período.
+
+## Faturamento mensal na Dashboard
+
+A seção Faturamento mensal permite informar ano e mês, consultar os totais do
+período e ver saídas com valor, ticket médio, registros sem valor e faturamento
+por dia. A consulta trata carregamento e falhas e permite refazer a solicitação.
+Baixar CSV solicita o relatório do período e salva o arquivo retornado pelo
+backend. Os parâmetros de período seguem as validações da API: anos de 2000 a
+2100 e meses de 1 a 12. Quando omitidos na API, o backend usa o mês e o ano
+atuais.
 
 ## Situação dos veículos no Dashboard
 

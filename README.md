@@ -6,7 +6,7 @@ Projeto de extensão universitária desenvolvido para auxiliar na organização 
 
 O frontend oferece Dashboard com indicadores de ocupação, consulta e busca local de veículos, mapa SVG interativo e painel com veículo, horário de entrada e registro ativo da vaga ocupada. O formulário de entrada oferece somente veículos disponíveis. A saída é solicitada pelo painel, com confirmação e envio automático do ID do registro. A associação usa `vaga.numero`; o ID do banco permanece separado.
 
-O Dashboard mostra a situação de cada veículo, sua vaga e horário de entrada, com filtros e atalho para abrir a vaga selecionada no mapa. A página Estacionamento também apresenta o histórico abaixo do mapa e dos detalhes, com placa, veículo, vaga, entrada, saída, permanência encerrada, situação e paginação. É possível filtrar por placa, período de entrada e movimentações abertas ou encerradas.
+O Dashboard mostra a situação de cada veículo, sua vaga e horário de entrada, com filtros e atalho para abrir a vaga selecionada no mapa. Também permite consultar o faturamento mensal por ano e mês, visualizar totais, ticket médio, saídas e faturamento por dia, e baixar o detalhamento em CSV. A página Estacionamento também apresenta o histórico abaixo do mapa e dos detalhes, com placa, veículo, vaga, entrada, saída, permanência encerrada, situação e paginação. É possível filtrar por placa, período de entrada e movimentações abertas ou encerradas.
 
 Em telas de até 900 px, a navegação fica fixa na parte inferior e o estacionamento apresenta as mesmas 27 vagas em uma grade por setor, com botões para toque. A seleção abre os detalhes e permite registrar entrada ou saída. Dashboard, histórico e veículos usam cartões no lugar das tabelas largas. Em telas maiores, permanecem o menu lateral, a planta SVG e as tabelas.
 
@@ -172,7 +172,7 @@ A verificação de tipos com `npx tsc --noEmit` ainda aponta uma dependência au
 
 ## Integração e principais rotas
 
-O Angular centraliza o HTTP em `Front/src/app/core/services/`, com URLs relativas e sem prefixo `/api`. O proxy de `angular.json` encaminha `/vagas`, `/vagas/**`, `/carros`, `/carros/**`, `/registros` e `/registros/**` para `http://127.0.0.1:3000`, preservando caminhos. A interface chama `GET /vagas`, `GET /vagas/status`, `GET /carros`, `POST /carros`, `PUT /carros/:id`, `DELETE /carros/:id`, `GET /registros`, `POST /registros/entrada` e `POST /registros/saida`.
+O Angular centraliza o HTTP em `Front/src/app/core/services/`, com URLs relativas e sem prefixo `/api`. O proxy configurado em `Front/proxy.conf.json` e habilitado por `angular.json` encaminha `/vagas`, `/vagas/**`, `/carros`, `/carros/**`, `/registros`, `/registros/**`, `/relatorios` e `/relatorios/**` para `http://127.0.0.1:3000`, preservando caminhos. A interface chama `GET /vagas`, `GET /vagas/status`, `GET /carros`, `POST /carros`, `PUT /carros/:id`, `DELETE /carros/:id`, `GET /registros`, `POST /registros/entrada`, `POST /registros/saida` e as rotas de faturamento mensal.
 
 | Rotas existentes                                        | Situação                                                              |
 | ------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -185,8 +185,16 @@ O Angular centraliza o HTTP em `Front/src/app/core/services/`, com URLs relativa
 | `POST /registros/entrada`                               | Integrado com `{ carroid, vagaid }`; concorrência pendente no backend |
 | `POST /registros/saida`                                 | Integrado com `{ registroId }` inteiro e positivo; erros de negócio em JSON |
 | `GET /registros`                                       | Histórico paginado com veículo, vaga e filtros por placa, período de entrada e situação |
+| `GET /relatorios/faturamento?ano=2026&mes=11`           | Resumo do faturamento mensal em JSON; `ano` e `mes` são opcionais e, quando omitidos, usam o período atual |
+| `GET /relatorios/faturamento/download?ano=2026&mes=11`  | Baixa o detalhamento mensal em CSV; usa os mesmos parâmetros e validações do resumo |
 
 O proxy só funciona no desenvolvimento. Em produção, encaminhe as rotas à API na mesma origem ou configure outra origem com CORS. Não há autenticação ou configuração de CORS na API atual.
+
+## Faturamento mensal
+
+A seção Faturamento mensal da Dashboard consulta `GET /relatorios/faturamento` para exibir o total faturado, quantidade de saídas com valor, ticket médio, registros sem valor e o detalhamento diário. Os campos de ano e mês são enviados como query parameters; o backend aceita anos entre 2000 e 2100 e meses de 1 a 12. A interface apresenta estados de consulta e erro, valida o período e permite tentar novamente.
+
+O botão Baixar CSV chama `GET /relatorios/faturamento/download` com o mesmo período e inicia o download do arquivo retornado. Embora o relatório seja chamado de faturamento mensal, o arquivo gerado é CSV, não Excel. O proxy de desenvolvimento encaminha ambas as rotas para o backend na porta 3000.
 
 ## Cadastro de veículos
 
