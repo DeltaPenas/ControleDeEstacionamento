@@ -2,6 +2,7 @@ import express from "express";
 import vagaRoutes from "./routes/VagasRoutes";
 import carroRoutes from "./routes/CarroRoutes";
 import registroRoutes from "./routes/RegistroRoutes";
+import relatorioRoutes from "./routes/RelatorioRoutes";
 import {PrismaClient} from "@prisma/client";
 
 
@@ -10,7 +11,7 @@ app.use(express.json());
 app.use("/carros", carroRoutes);
 app.use("/vagas", vagaRoutes);
 app.use("/registros", registroRoutes);
-
+app.use("/relatorios",relatorioRoutes);
 const PORTA = 3000;
 app.listen(PORTA, () => {
     console.log(`Servidor rodando em http://localhost:${PORTA}`);

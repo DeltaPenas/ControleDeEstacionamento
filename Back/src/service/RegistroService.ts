@@ -69,4 +69,9 @@ async liberarVaga(registroId: number) {
 
     return registroRepository.registrarSaida(registroId);
 }
+
+
+
+
+
 }

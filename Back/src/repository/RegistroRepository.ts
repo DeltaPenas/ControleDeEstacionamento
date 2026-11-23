@@ -131,7 +131,13 @@ async encerrarSeAtivo(id: number) {
     return resultado.count;
 }
 
-
-    
+    // Método para listar registros encerrados em um período específico
+    async listarEncerradosNoPeriodo(inicio: Date, fim: Date) {
+    return prisma.registroEstacionamentos.findMany({
+        where: { saida: { gte: inicio, lt: fim } },
+        select: { saida: true, valor: true },
+        orderBy: { saida: "asc" }
+    });
+}
 
 }
